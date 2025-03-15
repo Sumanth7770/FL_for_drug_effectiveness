@@ -3,57 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TF.js Model Demo</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <title>Upload File</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #uploadContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #uploadImage {
+            width: 150px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        #fileName {
+            font-size: 16px;
+            color: green;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>TensorFlow.js Model Demo</h1>
-    
-    <input type="file" id="uploadImage" accept="image/*">
-    <canvas id="canvas" width="224" height="224"></canvas>
-    <button onclick="predict()">Predict</button>
 
-    <h2>Prediction:</h2>
-    <p id="predictionResult">Upload an image and click predict</p>
+    <div id="uploadContainer">
+        <h2>Upload Your File</h2>
+        <!-- Image that acts as upload button -->
+        <img id="uploadImage" src="upload-icon.png" alt="Click to Upload">
+        <!-- Hidden file input -->
+        <input type="file" id="fileInput" accept=".csv, .json" style="display: none;">
+        <!-- Display selected file name -->
+        <p id="fileName">No file selected</p>
+    </div>
 
     <script>
-        let model;
-        
-        async function loadModel() {
-            model = await tf.loadLayersModel('https://github.com/Sumanth7770/FL_for_drug_effectiveness/blob/main/tfjs_model');
-            console.log("✅ Model Loaded Successfully!");
-        }
-        
-        async function predict() {
-            if (!model) {
-                alert("Please wait, model is still loading...");
-                return;
+        // When user clicks on the image, trigger file input
+        document.getElementById("uploadImage").addEventListener("click", function() {
+            document.getElementById("fileInput").click();
+        });
+
+        // When file is selected, display file name
+        document.getElementById("fileInput").addEventListener("change", function(event) {
+            let file = event.target.files[0];
+            if (file) {
+                document.getElementById("fileName").textContent = "Selected File: " + file.name;
+
+                // OPTIONAL: Send the file to the backend
+                let formData = new FormData();
+                formData.append("file", file);
+
+                fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                }).then(response => response.json())
+                  .then(data => console.log("Upload successful:", data))
+                  .catch(error => console.error("Error uploading file:", error));
+            } else {
+                document.getElementById("fileName").textContent = "No file selected";
             }
-
-            const inputImage = document.getElementById('uploadImage').files[0];
-            if (!inputImage) {
-                alert("Please upload an image first!");
-                return;
-            }
-
-            const img = document.createElement("img");
-            img.src = URL.createObjectURL(inputImage);
-            img.onload = async () => {
-                const canvas = document.getElementById("canvas");
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, 224, 224);
-
-                let tensor = tf.browser.fromPixels(canvas)
-                                .resizeNearestNeighbor([224, 224])
-                                .toFloat()
-                                .expandDims();
-                
-                const prediction = await model.predict(tensor).data();
-                document.getElementById("predictionResult").innerText = `Prediction: ${prediction}`;
-            };
-        }
-
-        loadModel();
+        });
     </script>
+
 </body>
 </html>
