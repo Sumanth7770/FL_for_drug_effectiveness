@@ -3,66 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload File</title>
+    <title>Federated Learning - Drug Effectiveness</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: 50px;
+            margin: 40px;
+            background-color: #f4f4f4;
         }
-        #uploadContainer {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        h2 {
+            color: #333;
+        }
+        #container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            margin: auto;
+        }
+        #uploadSection {
+            margin: 20px 0;
         }
         #uploadImage {
             width: 150px;
             cursor: pointer;
-            margin-bottom: 10px;
+        }
+        #fileInput {
+            display: none;
         }
         #fileName {
             font-size: 16px;
             color: green;
             margin-top: 10px;
         }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #predictionResult {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0056b3;
+            margin-top: 15px;
+        }
+        #chartContainer {
+            margin-top: 30px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="uploadContainer">
-        <h2>Upload Your File</h2>
-        <!-- Image that acts as upload button -->
-        <img id="uploadImage" src="upload-icon.png" alt="Click to Upload">
-        <!-- Hidden file input -->
-        <input type="file" id="fileInput" accept=".csv, .json" style="display: none;">
-        <!-- Display selected file name -->
-        <p id="fileName">No file selected</p>
+    <div id="container">
+        <h2>Drug Effectiveness Prediction</h2>
+        
+        <!-- File Upload Section -->
+        <div id="uploadSection">
+            <h3>Upload Patient Data</h3>
+            <img id="uploadImage" src="upload-icon.png" alt="Click to Upload">
+            <input type="file" id="fileInput" accept=".csv, .json">
+            <p id="fileName">No file selected</p>
+            <button id="predictBtn">Predict Effectiveness</button>
+        </div>
+
+        <!-- Prediction Result -->
+        <p id="predictionResult"></p>
+
+        <!-- Visualization -->
+        <div id="chartContainer">
+            <h3>Training Metrics</h3>
+            <canvas id="trainingChart"></canvas>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // When user clicks on the image, trigger file input
+        // Handle file upload
         document.getElementById("uploadImage").addEventListener("click", function() {
             document.getElementById("fileInput").click();
         });
 
-        // When file is selected, display file name
         document.getElementById("fileInput").addEventListener("change", function(event) {
             let file = event.target.files[0];
             if (file) {
                 document.getElementById("fileName").textContent = "Selected File: " + file.name;
-
-                // OPTIONAL: Send the file to the backend
-                let formData = new FormData();
-                formData.append("file", file);
-
-                fetch("/upload", {
-                    method: "POST",
-                    body: formData
-                }).then(response => response.json())
-                  .then(data => console.log("Upload successful:", data))
-                  .catch(error => console.error("Error uploading file:", error));
             } else {
                 document.getElementById("fileName").textContent = "No file selected";
+            }
+        });
+
+        // Handle prediction request
+        document.getElementById("predictBtn").addEventListener("click", function() {
+            let fileInput = document.getElementById("fileInput");
+            if (!fileInput.files[0]) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            fetch("/predict", {  // Change this URL if your backend is different
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("predictionResult").textContent = 
+                    "Predicted Effectiveness: " + data.prediction;
+            })
+            .catch(error => console.error("Error predicting:", error));
+        });
+
+        // Training Metrics Visualization (Placeholder Data)
+        const ctx = document.getElementById('trainingChart').getContext('2d');
+        const trainingChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Round 1', 'Round 2', 'Round 3', 'Round 4', 'Round 5'],
+                datasets: [{
+                    label: 'Training Accuracy',
+                    data: [0.65, 0.72, 0.78, 0.81, 0.85], // Example data
+                    borderColor: 'blue',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: 'Training Round' } },
+                    y: { title: { display: true, text: 'Accuracy' }, min: 0.5, max: 1 }
+                }
             }
         });
     </script>
