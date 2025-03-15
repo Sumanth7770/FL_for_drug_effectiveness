@@ -1,0 +1,6 @@
+Patient_ID, Age, Gender, Drug, Dosage_mg, Blood_Pressure, Cholesterol, Effectiveness
+1, 45, Male, Drug_A, 50, 120, 190, 0.85
+2, 34, Female, Drug_B, 25, 110, 170, 0.78
+3, 52, Male, Drug_C, 75, 130, 200, 0.92
+4, 29, Female, Drug_A, 30, 115, 180, 0.72
+5, 60, Male, Drug_B, 100, 140, 220, 0.88
