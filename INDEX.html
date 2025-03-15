@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TF.js Model Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+</head>
+<body>
+    <h1>TensorFlow.js Model Demo</h1>
+    
+    <input type="file" id="uploadImage" accept="image/*">
+    <canvas id="canvas" width="224" height="224"></canvas>
+    <button onclick="predict()">Predict</button>
+
+    <h2>Prediction:</h2>
+    <p id="predictionResult">Upload an image and click predict</p>
+
+    <script>
+        let model;
+        
+        async function loadModel() {
+            model = await tf.loadLayersModel('https://YOUR_GITHUB_REPO/tfjs_model/model.json');
+            console.log("✅ Model Loaded Successfully!");
+        }
+        
+        async function predict() {
+            if (!model) {
+                alert("Please wait, model is still loading...");
+                return;
+            }
+
+            const inputImage = document.getElementById('uploadImage').files[0];
+            if (!inputImage) {
+                alert("Please upload an image first!");
+                return;
+            }
+
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(inputImage);
+            img.onload = async () => {
+                const canvas = document.getElementById("canvas");
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, 224, 224);
+
+                let tensor = tf.browser.fromPixels(canvas)
+                                .resizeNearestNeighbor([224, 224])
+                                .toFloat()
+                                .expandDims();
+                
+                const prediction = await model.predict(tensor).data();
+                document.getElementById("predictionResult").innerText = `Prediction: ${prediction}`;
+            };
+        }
+
+        loadModel();
+    </script>
+</body>
+</html>
